@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/shared/routes/route_generator.dart';
 import 'features/auth/screens/onBoarding_screen.dart';
 
 class MyApp extends StatefulWidget {
@@ -12,6 +14,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+   final GoRouter router = RouteGenerator.generateRoute();
   ThemeMode _themeMode = ThemeMode.light;
 
   void toggleTheme() {
@@ -24,11 +27,12 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Personal Knowledge Vault App',
       themeMode: _themeMode,
-      home: const OnboardingScreen(),
+      routerConfig: router,
+   
     );
   }
 }

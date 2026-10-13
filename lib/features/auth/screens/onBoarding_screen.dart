@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -47,7 +49,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      _onComplete();
+      // _onComplete();
+      context.push(login);
     }
   }
 
@@ -60,11 +63,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _onComplete() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Onboarding Complete! Navigating...')),
-    );
-  }
+  // void _onComplete() {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text('Onboarding Complete! Navigating...')),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +142,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Skip Button (or Shield badge on final page)
                   if (!isLastPage)
                     GestureDetector(
-                      onTap: _onComplete,
+                      onTap: (){
+                        context.push(login);
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
@@ -292,11 +297,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            isLastPage ? 'Get started' : 'Next',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            onTap: (){
+                              context.push(login);
+                            },
+                            child: Text(
+                              isLastPage ? 'Get started' : 'Next',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -399,7 +409,7 @@ class _GraphicScreen1 extends StatelessWidget {
               badgeText: 'PDF',
               badgeBgColor: Color(0xFFFEE2E2),
               badgeTextColor: Color(0xFFEF4444),
-              title: 'Annual...',
+              title: 'Architecture',
               subtitle: '2.4 MB',
             ),
           ),
