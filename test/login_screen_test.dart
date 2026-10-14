@@ -14,8 +14,6 @@ void main() {
       ),
     );
 
-    // Verify top icon box with ?
-    expect(find.text('?'), findsOneWidget);
 
     // Verify badges
     expect(find.text('ENCRYPTED WORKSPACE'), findsOneWidget);

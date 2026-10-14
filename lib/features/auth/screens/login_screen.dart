@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/shared/constants/assets/assets.dart';
 import 'package:knowledge_vault_app/shared/constants/colors.dart';
+import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,13 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLogin() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Logging in as ${_emailController.text.trim()}...'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    context.go(home);
   }
 
   void _onGoogleSignIn() {
@@ -547,15 +543,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           GestureDetector(
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Navigating to Sign Up...'),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
+              context.push(register);
             },
             child: const Text(
               'Sign up',

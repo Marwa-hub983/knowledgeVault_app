@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/shared/routes/route_generator.dart';
-import 'features/auth/screens/onBoarding_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
