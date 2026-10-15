@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/features/auth/screens/login_screen.dart';
 import 'package:knowledge_vault_app/features/auth/screens/onBoarding_screen.dart';
 import 'package:knowledge_vault_app/features/auth/screens/register_screen.dart';
+import 'package:knowledge_vault_app/features/documents/screens/library_screen.dart';
 import 'package:knowledge_vault_app/features/main/screens/home_screen.dart';
 import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
@@ -25,6 +26,10 @@ class RouteGenerator {
         GoRoute(
           path: home,
           builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: library,
+          builder: (context, state) => const LibraryScreen(),
         ),
       ],
     );

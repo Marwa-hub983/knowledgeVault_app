@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:knowledge_vault_app/features/documents/screens/library_screen.dart';
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -49,6 +50,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentNavIndex == 1) {
+      return LibraryScreen(
+        currentNavIndex: _currentNavIndex,
+        onNavTap: (index) {
+          setState(() {
+            _currentNavIndex = index;
+          });
+        },
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(

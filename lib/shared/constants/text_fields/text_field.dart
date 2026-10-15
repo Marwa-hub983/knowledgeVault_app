@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:knowledge_vault_app/shared/constants/colors.dart';
 
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
