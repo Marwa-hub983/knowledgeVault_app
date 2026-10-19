@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:knowledge_vault_app/features/documents/screens/library_screen.dart';
+import 'package:knowledge_vault_app/features/search&chat/screens/ask_ai_screen.dart';
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
   final TextEditingController _searchController = TextEditingController();
+  String? _prefilledAiQuery;
 
   final List<String> _suggestedQuestions = [
     '"What were the key takeaways from Q3..."',
@@ -43,6 +45,17 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(
         content: Text('Asking: $question'),
         behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Ask AI',
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _prefilledAiQuery =
+                  question.replaceAll('"', '').replaceAll('...', '');
+              _currentNavIndex = 2;
+            });
+          },
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -52,6 +65,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     if (_currentNavIndex == 1) {
       return LibraryScreen(
+        currentNavIndex: _currentNavIndex,
+        onNavTap: (index) {
+          setState(() {
+            _currentNavIndex = index;
+          });
+        },
+      );
+    }
+
+    if (_currentNavIndex == 2) {
+      final initialQuery = _prefilledAiQuery;
+      _prefilledAiQuery = null;
+      return AskAiScreen(
+        initialQuery: initialQuery,
         currentNavIndex: _currentNavIndex,
         onNavTap: (index) {
           setState(() {
@@ -79,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Top App Bar
-                  _buildTopBar(),
+                  //_buildTopBar(),
 
                   const SizedBox(height: 16),
 
@@ -256,23 +283,42 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           // Sparkle circular badge
-          Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEEF2FF),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              size: 16,
-              color: Color(0xFF6366F1),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _prefilledAiQuery = _searchController.text.trim().isNotEmpty
+                    ? _searchController.text.trim()
+                    : null;
+                _currentNavIndex = 2;
+              });
+            },
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: Color(0xFF6366F1),
+              ),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _searchController,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (query) {
+                if (query.trim().isNotEmpty) {
+                  setState(() {
+                    _prefilledAiQuery = query.trim();
+                    _currentNavIndex = 2;
+                  });
+                }
+              },
               style: FontPalette.hW500S13.copyWith(
                 color: const Color(0xFF0F172A),
               ),

@@ -4,6 +4,7 @@ import 'package:knowledge_vault_app/features/auth/screens/onBoarding_screen.dart
 import 'package:knowledge_vault_app/features/auth/screens/register_screen.dart';
 import 'package:knowledge_vault_app/features/documents/screens/library_screen.dart';
 import 'package:knowledge_vault_app/features/main/screens/home_screen.dart';
+import 'package:knowledge_vault_app/features/search&chat/screens/ask_ai_screen.dart';
 import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class RouteGenerator {
@@ -30,6 +31,13 @@ class RouteGenerator {
         GoRoute(
           path: library,
           builder: (context, state) => const LibraryScreen(),
+        ),
+        GoRoute(
+          path: askAi,
+          builder: (context, state) {
+            final query = state.extra is String ? state.extra as String : null;
+            return AskAiScreen(initialQuery: query);
+          },
         ),
       ],
     );

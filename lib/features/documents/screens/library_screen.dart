@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/features/documents/models/document_item.dart';
 import 'package:knowledge_vault_app/features/documents/widgets/document_card.dart';
 import 'package:knowledge_vault_app/features/documents/widgets/empty_state_preview.dart';
 import 'package:knowledge_vault_app/features/documents/widgets/filter_chips_bar.dart';
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
+import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class LibraryScreen extends StatefulWidget {
   final ValueChanged<int>? onNavTap;
@@ -974,7 +976,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     return InkWell(
       onTap: () {
-        widget.onNavTap?.call(index);
+        if (widget.onNavTap != null) {
+          widget.onNavTap!(index);
+        } else {
+          if (index == 0) context.go(home);
+          if (index == 1) context.go(library);
+          if (index == 2) context.go(askAi);
+        }
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
