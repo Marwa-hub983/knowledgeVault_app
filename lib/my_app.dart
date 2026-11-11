@@ -3,7 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/shared/routes/route_generator.dart';
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final bool showOnboarding;
+
+  const MyApp({
+    super.key,
+    this.showOnboarding = true,
+  });
 
   static _MyAppState? of(BuildContext context) =>
       context.findAncestorStateOfType<_MyAppState>();
@@ -13,7 +18,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-   final GoRouter router = RouteGenerator.generateRoute();
+  late final GoRouter router = RouteGenerator.generateRoute(
+    showOnboarding: widget.showOnboarding,
+  );
   ThemeMode _themeMode = ThemeMode.light;
 
   void toggleTheme() {

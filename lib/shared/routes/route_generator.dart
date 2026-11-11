@@ -8,13 +8,19 @@ import 'package:knowledge_vault_app/features/search&chat/screens/ask_ai_screen.d
 import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class RouteGenerator {
-  static GoRouter generateRoute() {
+  static GoRouter generateRoute({bool showOnboarding = true}) {
     return GoRouter(
-      initialLocation: onBoarding,
+      initialLocation: showOnboarding ? onBoarding : login,
+      redirect: (context, state) {
+        if (!showOnboarding && state.matchedLocation == onBoarding) {
+          return login;
+        }
+        return null;
+      },
       routes: [
         GoRoute(
           path: onBoarding,
-          builder: (context, state) => OnboardingScreen(),
+          builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
           path: login,

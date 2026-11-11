@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/onboarding_service.dart';
 import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final OnboardingService onboardingService;
+
+  const OnboardingScreen({
+    super.key,
+    this.onboardingService = const OnboardingService(),
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -12,6 +18,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isCompleting = false;
 
   final List<OnboardingData> _pages = const [
     OnboardingData(
@@ -42,6 +49,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  Future<void> _completeOnboarding() async {
+    if (_isCompleting) return;
+    _isCompleting = true;
+    try {
+      await widget.onboardingService.markOnboardingCompleted();
+    } finally {
+      _isCompleting = false;
+    }
+    if (!mounted) return;
+    context.go(login);
+  }
+
   void _onNext() {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
@@ -49,8 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // _onComplete();
-      context.push(login);
+      _completeOnboarding();
     }
   }
 
@@ -142,9 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Skip Button (or Shield badge on final page)
                   if (!isLastPage)
                     GestureDetector(
-                      onTap: (){
-                        context.push(login);
-                      },
+                      onTap: _completeOnboarding,
                       behavior: HitTestBehavior.opaque,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
@@ -297,16 +313,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: (){
-                              context.push(login);
-                            },
-                            child: Text(
-                              isLastPage ? 'Get started' : 'Next',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          Text(
+                            isLastPage ? 'Get started' : 'Next',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -585,24 +596,30 @@ class _GraphicScreen2 extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Color(0xFF10B981),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Chunk #12: Dense Vectors',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF334155),
+                      const Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: Color(0xFF10B981),
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'Chunk #12: Dense Vectors',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
@@ -636,24 +653,30 @@ class _GraphicScreen2 extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Color(0xFF6366F1),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Chunk #13: Key Derivation',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF334155),
+                      const Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: Color(0xFF6366F1),
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'Chunk #13: Key Derivation',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
@@ -942,24 +965,30 @@ class _GraphicScreen4 extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.fact_check_outlined,
-                        size: 16,
-                        color: Color(0xFF0D9488),
-                      ),
-                      SizedBox(width: 6),
-                      Text(
-                        'Security-Review.pdf · p.4',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.fact_check_outlined,
+                          size: 16,
+                          color: Color(0xFF0D9488),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Security-Review.pdf · p.4',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
@@ -1031,24 +1060,30 @@ class _GraphicScreen4 extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.shield_outlined,
-                        size: 14,
-                        color: Color(0xFF0D9488),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'Verified Source [#1]',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.shield_outlined,
+                          size: 14,
                           color: Color(0xFF0D9488),
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            'Verified Source [#1]',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0D9488),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  SizedBox(width: 8),
                   Text(
                     'SHA-256 Validated',
                     style: TextStyle(

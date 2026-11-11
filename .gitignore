@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Firebase secrets & logs
+firebase-service-account.json
+firebase-debug.log
