@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:knowledge_vault_app/shared/constants/assets/assets.dart';
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isPasswordVisible = false;
+  bool _isLoading= false;
 
   @override
   void dispose() {
@@ -25,9 +27,79 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onLogin() {
-    context.go(home);
+ void _showMessage(String text) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(text),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+  );
+}
+
+String _mapAuthError(String code) {
+  switch (code) {
+    case 'invalid-email':
+      return 'Please enter a valid email address.';
+    case 'invalid-credential':
+    case 'wrong-password':
+    case 'user-not-found':
+      return 'Incorrect email or password.';
+    case 'user-disabled':
+      return 'This account has been disabled.';
+    case 'too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    case 'network-request-failed':
+      return 'No internet connection.';
+    default:
+      return 'Something went wrong. Please try again.';
   }
+}
+
+Future<void> _onLogin() async {
+  final email = _emailController.text.trim();
+  final password = _passwordController.text;
+
+  if (email.isEmpty || !email.contains('@')) {
+    _showMessage('Please enter a valid email address.');
+    return;
+  }
+  if (password.length < 6) {
+    _showMessage('Password must be at least 6 characters.');
+    return;
+  }
+
+  setState(() => _isLoading = true);
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    if (!mounted) return;
+    context.go(home);
+  } on FirebaseAuthException catch (e) {
+    _showMessage(_mapAuthError(e.code));
+  } catch (_) {
+    _showMessage('Something went wrong. Please try again.');
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
+  }
+}
+
+Future<void> _onForgotPassword() async {
+  final email = _emailController.text.trim();
+  if (email.isEmpty || !email.contains('@')) {
+    _showMessage('Enter your email above first.');
+    return;
+  }
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    _showMessage('Password reset email sent. Check your inbox.');
+  } on FirebaseAuthException catch (e) {
+    _showMessage(_mapAuthError(e.code));
+  }
+}
 
   void _onGoogleSignIn() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -39,15 +111,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _onForgotPassword() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Password reset instructions sent to your email.'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
+  // void _onForgotPassword() {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: const Text('Password reset instructions sent to your email.'),
+  //       behavior: SnackBarBehavior.floating,
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     minWidth: 44,
                     minHeight: 44,
                   ),
-                  hintText: '••••••••',
+                  //hintText: '••••••••',
                   hintStyle: const TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 16,
@@ -373,40 +445,38 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              child: ElevatedButton(
-                onPressed: _onLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Log in',
-                        style: TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            child: ElevatedButton(
+  onPressed: _isLoading ? null : _onLogin,
+  style: ElevatedButton.styleFrom(
+    backgroundColor: kPrimaryColor,
+    foregroundColor: Colors.white,
+    disabledBackgroundColor: kPrimaryColor.withValues(alpha: 0.6),
+    elevation: 0,
+    shadowColor: Colors.transparent,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+  ),
+  child: _isLoading
+      ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        )
+      : const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Log in',
+                  style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white)),
+              SizedBox(width: 8),
+              Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+            ],
+          ),
+        ),
+),
             ),
 
             const SizedBox(height: 22),

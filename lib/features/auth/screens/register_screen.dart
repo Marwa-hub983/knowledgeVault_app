@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _agreedToTerms = true;
-
+  bool _isLoading = false;
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -34,7 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _onCreateAccount() {
+  Future<void> _onCreateAccount() async {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -44,36 +45,74 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showErrorSnackBar('Please enter your full name');
       return;
     }
-
     if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
       _showErrorSnackBar('Please enter a valid email address');
       return;
     }
-
     if (password.length < 8) {
       _showErrorSnackBar('Password must be at least 8 characters');
       return;
     }
-
     if (password != confirmPassword) {
       _showErrorSnackBar('Passwords do not match');
       return;
     }
-
     if (!_agreedToTerms) {
       _showErrorSnackBar("Please agree to Vault's Terms & Privacy Guarantee");
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Creating vault account for $fullName...'),
-        backgroundColor: const Color(0xFF0F766E),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-    context.go(home);
+    FocusScope.of(context).unfocus();
+    setState(() => _isLoading = true);
+
+    try {
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      // Save the full name on the Firebase user
+      await credential.user?.updateDisplayName(fullName);
+
+      // Optional: verify the email
+      // await credential.user?.sendEmailVerification();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Welcome, $fullName! Your vault is ready.'),
+          backgroundColor: const Color(0xFF0F766E),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      context.go(login);
+    } on FirebaseAuthException catch (e) {
+      _showErrorSnackBar(_mapAuthError(e.code));
+    } catch (_) {
+      _showErrorSnackBar('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _mapAuthError(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'An account already exists for this email.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 8 characters.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-up is not enabled.';
+      case 'network-request-failed':
+        return 'No internet connection.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return 'Could not create account. Please try again.';
+    }
   }
 
   void _showErrorSnackBar(String message) {
@@ -189,11 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.lock_rounded,
-              size: 11,
-              color: Color(0xFF0F766E),
-            ),
+            const Icon(Icons.lock_rounded, size: 11, color: Color(0xFF0F766E)),
             const SizedBox(width: 5),
             Text(
               'ZERO-KNOWLEDGE ARCHITECTURE',
@@ -215,10 +250,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A0F172A),
@@ -579,7 +611,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ..onTap = () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text("Viewing Vault's Terms of Service..."),
+                                  content: Text(
+                                    "Viewing Vault's Terms of Service...",
+                                  ),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -596,7 +630,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ..onTap = () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Viewing AES-256 Privacy Guarantee...'),
+                                  content: Text(
+                                    'Viewing AES-256 Privacy Guarantee...',
+                                  ),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );
@@ -627,7 +663,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
               child: ElevatedButton(
-                onPressed: _onCreateAccount,
+                onPressed:_isLoading? null : _onCreateAccount,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   foregroundColor: Colors.white,
@@ -637,7 +673,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(21),
                   ),
                 ),
-                child: FittedBox(
+                child:
+                
+                
+                
+                _isLoading? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2,color: Colors.white,),
+                ): FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -667,10 +711,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Row(
               children: [
                 const Expanded(
-                  child: Divider(
-                    color: Color(0xFFE2E8F0),
-                    thickness: 0.8,
-                  ),
+                  child: Divider(color: Color(0xFFE2E8F0), thickness: 0.8),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -683,10 +724,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const Expanded(
-                  child: Divider(
-                    color: Color(0xFFE2E8F0),
-                    thickness: 0.8,
-                  ),
+                  child: Divider(color: Color(0xFFE2E8F0), thickness: 0.8),
                 ),
               ],
             ),
@@ -718,11 +756,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              googleIcon,
-                              height: 20,
-                              width: 20,
-                            ),
+                            Image.asset(googleIcon, height: 20, width: 20),
                             const SizedBox(width: 8),
                             Text(
                               'Continue with Google',
