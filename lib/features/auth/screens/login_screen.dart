@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/auth_services.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/auth_session_service.dart';
 import 'package:knowledge_vault_app/shared/constants/assets/assets.dart';
 import 'package:knowledge_vault_app/shared/constants/colors.dart';
 import 'package:knowledge_vault_app/shared/routes/routes.dart';
@@ -18,7 +20,22 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isPasswordVisible = false;
-  bool _isLoading= false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEmail();
+  }
+
+  Future<void> _loadSavedEmail() async {
+    final lastEmail = await const AuthSessionService().getLastEmail();
+    if (mounted && lastEmail != null && lastEmail.isNotEmpty) {
+      setState(() {
+        _emailController.text = lastEmail;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -72,10 +89,7 @@ Future<void> _onLogin() async {
 
   setState(() => _isLoading = true);
   try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    await const AuthService().signIn(email, password);
     if (!mounted) return;
     context.go(home);
   } on FirebaseAuthException catch (e) {
@@ -94,7 +108,7 @@ Future<void> _onForgotPassword() async {
     return;
   }
   try {
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    await const AuthService().resetPassword(email);
     _showMessage('Password reset email sent. Check your inbox.');
   } on FirebaseAuthException catch (e) {
     _showMessage(_mapAuthError(e.code));

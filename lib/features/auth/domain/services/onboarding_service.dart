@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:knowledge_vault_app/shared/services/preferences_helper.dart';
 
 /// Persists whether the user has already completed or skipped onboarding.
 class OnboardingService {
@@ -8,28 +6,12 @@ class OnboardingService {
 
   const OnboardingService();
 
-  Future<T> _withPreferences<T>({
-    required Future<T> Function(SharedPreferences prefs) action,
-    required T fallback,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return await action(prefs);
-    } on MissingPluginException {
-      debugPrint(
-        'SharedPreferences plugin is not registered in the current native '
-        'build. Stop the app completely and do a full rebuild (flutter run).',
-      );
-      return fallback;
-    }
-  }
-
-  Future<bool> hasSeenOnboarding() => _withPreferences<bool>(
+  Future<bool> hasSeenOnboarding() => runWithSharedPreferences<bool>(
         action: (prefs) async => prefs.getBool(hasSeenOnboardingKey) ?? false,
         fallback: false,
       );
 
-  Future<void> markOnboardingCompleted() => _withPreferences<void>(
+  Future<void> markOnboardingCompleted() => runWithSharedPreferences<void>(
         action: (prefs) => prefs.setBool(hasSeenOnboardingKey, true),
         fallback: null,
       );

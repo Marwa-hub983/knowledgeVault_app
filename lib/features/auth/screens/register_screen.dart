@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/auth_services.dart';
 import 'package:knowledge_vault_app/shared/constants/assets/assets.dart';
 import 'package:knowledge_vault_app/shared/constants/colors.dart';
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
@@ -66,14 +67,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      // Save the full name on the Firebase user
-      await credential.user?.updateDisplayName(fullName);
-
-      // Optional: verify the email
-      // await credential.user?.sendEmailVerification();
+      await const AuthService().signUp(
+        email,
+        password,
+        fullName: fullName,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       );
-      context.go(login);
+      context.go(home, extra: fullName);
     } on FirebaseAuthException catch (e) {
       _showErrorSnackBar(_mapAuthError(e.code));
     } catch (_) {

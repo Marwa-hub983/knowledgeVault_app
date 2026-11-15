@@ -4,10 +4,12 @@ import 'package:knowledge_vault_app/shared/routes/route_generator.dart';
 
 class MyApp extends StatefulWidget {
   final bool showOnboarding;
+  final bool isLoggedIn;
 
   const MyApp({
     super.key,
     this.showOnboarding = true,
+    this.isLoggedIn = false,
   });
 
   static _MyAppState? of(BuildContext context) =>
@@ -20,6 +22,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final GoRouter router = RouteGenerator.generateRoute(
     showOnboarding: widget.showOnboarding,
+    isLoggedIn: widget.isLoggedIn,
   );
   ThemeMode _themeMode = ThemeMode.light;
 

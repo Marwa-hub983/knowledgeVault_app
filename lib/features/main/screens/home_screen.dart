@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/auth_services.dart';
+import 'package:knowledge_vault_app/features/auth/domain/services/auth_session_service.dart';
 import 'package:knowledge_vault_app/features/documents/screens/library_screen.dart';
 import 'package:knowledge_vault_app/features/search&chat/screens/ask_ai_screen.dart';
 import 'package:knowledge_vault_app/shared/constants/font_palette.dart';
+import 'package:knowledge_vault_app/shared/routes/routes.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? userName;
+  final Future<void> Function()? onLogout;
+
+  const HomeScreen({
+    super.key,
+    this.userName,
+    this.onLogout,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -12,8 +23,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
+  bool _isLoggingOut = false;
   final TextEditingController _searchController = TextEditingController();
   String? _prefilledAiQuery;
+  String _displayName = 'Marwa';
+  String? _userEmail;
 
   final List<String> _suggestedQuestions = [
     '"What were the key takeaways from Q3..."',
@@ -21,6 +35,58 @@ class _HomeScreenState extends State<HomeScreen> {
     '"List action items from team sync"',
     '"Compare indexing latency across..."',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userName != null && widget.userName!.trim().isNotEmpty) {
+      _displayName = widget.userName!.trim();
+    }
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    // 1. If widget explicitly passed a userName, use it
+    if (widget.userName != null && widget.userName!.trim().isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _displayName = widget.userName!.trim();
+        });
+      }
+      return;
+    }
+
+    // 2. Try Firebase Auth currentUser first
+    final firebaseUser = const AuthService().currentUser;
+    String? name = firebaseUser?.displayName;
+    String? email = firebaseUser?.email;
+
+    // 3. Fall back to stored session info in SharedPreferences
+    final info = await const AuthSessionService().getStoredUserInfo();
+    if (name == null || name.trim().isEmpty) {
+      name = info.displayName;
+    }
+    email ??= info.email;
+
+    // 4. Fall back to email prefix if name is missing but email exists
+    if ((name == null || name.trim().isEmpty) && email != null && email.isNotEmpty) {
+      name = email.split('@').first;
+    }
+
+    if (mounted && name != null && name.trim().isNotEmpty) {
+      setState(() {
+        _displayName = name!.trim();
+        _userEmail = email;
+      });
+    }
+  }
+
+  String get _greetingName {
+    final trimmed = _displayName.trim();
+    if (trimmed.isEmpty) return 'Marwa';
+    final parts = trimmed.split(RegExp(r'\s+'));
+    return parts.first;
+  }
 
   @override
   void dispose() {
@@ -88,6 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    if (_currentNavIndex == 3) {
+      return _buildSettingsScaffold();
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
@@ -106,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Top App Bar
-                  //_buildTopBar(),
+               //   _buildTopBar(),
 
                   const SizedBox(height: 16),
 
@@ -203,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Greeting "Good morning, Marwa" with synced count and large avatar
+  /// Greeting "Good morning, User" with synced count and large avatar
   Widget _buildGreetingRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -214,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good morning, Marwa',
+                'Good morning, $_greetingName',
                 style: FontPalette.hW700S22.copyWith(
                   color: const Color(0xFF0F172A),
                   letterSpacing: -0.3,
@@ -1007,6 +1077,132 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _onLogout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+    try {
+      await (widget.onLogout?.call() ?? const AuthService().signOut());
+      if (!mounted) return;
+      GoRouter.maybeOf(context)?.go(login);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingOut = false);
+      }
+    }
+  }
+
+  Widget _buildSettingsScaffold() {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
+                style: FontPalette.hW700S22.copyWith(
+                  color: const Color(0xFF0F172A),
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Manage your Vault account and session',
+                style: FontPalette.hW400S13.copyWith(
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FutureBuilder<({String? email, String? displayName})>(
+                future: const AuthSessionService().getStoredUserInfo(),
+                builder: (context, snapshot) {
+                  final displayName =
+                      snapshot.data?.displayName ?? (_displayName.isNotEmpty ? _displayName : null);
+                  final email = snapshot.data?.email ?? _userEmail;
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildAvatar(size: 46, showOnlineBadge: true),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                (displayName != null && displayName.isNotEmpty)
+                                    ? displayName
+                                    : 'Vault Member',
+                                style: FontPalette.hW700S16.copyWith(
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              if (email != null && email.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  email,
+                                  style: FontPalette.hW400S13.copyWith(
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoggingOut ? null : _onLogout,
+                  icon: _isLoggingOut
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(
+                          Icons.logout_rounded,
+                          color: Color(0xFFDC2626),
+                          size: 20,
+                        ),
+                  label: Text(
+                    _isLoggingOut ? 'Logging out...' : 'Log out',
+                    style: FontPalette.hW700S14.copyWith(
+                      color: const Color(0xFFDC2626),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFFECACA)),
+                    backgroundColor: const Color(0xFFFEF2F2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
